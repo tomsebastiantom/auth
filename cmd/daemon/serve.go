@@ -73,7 +73,7 @@ func init() {
 	graceful.DefaultShutdownTimeout = 120 * time.Second
 }
 
-func servePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
+func ServePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -97,7 +97,7 @@ func servePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOp
 	n.UseFunc(semconv.Middleware)
 	n.Use(publicLogger)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
-	n.Use(sqa(ctx, cmd, r))
+	// n.Use(sqa(ctx, cmd, r))
 
 	n.Use(r.PrometheusManager())
 
@@ -168,7 +168,7 @@ func servePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOp
 	})
 }
 
-func serveAdmin(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
+func ServeAdmin(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -321,7 +321,7 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 	)
 }
 
-func bgTasks(d driver.Registry, cmd *cobra.Command, opts []Option) error {
+func BgTasks(d driver.Registry, cmd *cobra.Command, opts []Option) error {
 	modifiers := NewOptions(cmd.Context(), opts)
 	ctx := modifiers.ctx
 
@@ -341,10 +341,10 @@ func ServeAll(d driver.Registry, slOpts *servicelocatorx.Options, opts []Option)
 		cmd.SetContext(ctx)
 		opts = append(opts, WithContext(ctx))
 
-		servePublic(d, cmd, g, slOpts, opts)
-		serveAdmin(d, cmd, g, slOpts, opts)
+		ServePublic(d, cmd, g, slOpts, opts)
+		ServeAdmin(d, cmd, g, slOpts, opts)
 		g.Go(func() error {
-			return bgTasks(d, cmd, opts)
+			return BgTasks(d, cmd, opts)
 		})
 		return g.Wait()
 	}

@@ -605,7 +605,7 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 
 	o := newOptions(opts)
 
-	m.jsonnetPool = o.jsonnetPool
+	// m.jsonnetPool = o.jsonnetPool
 
 	var instrumentedDriverOpts []instrumentedsql.Opt
 	if m.Tracer(ctx).IsLoaded() {

@@ -4,6 +4,7 @@
 package registration
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -123,6 +124,7 @@ func (h *Handler) NewRegistrationFlow(w http.ResponseWriter, r *http.Request, ft
 		return nil, err
 	}
 	for _, o := range opts {
+		fmt.Println(o)
 		o(f)
 	}
 

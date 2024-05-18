@@ -89,7 +89,7 @@ func ServeMetrics(ctx context.Context, r driver.Registry) error {
 }
 
 func Watch(ctx context.Context, r driver.Registry) error {
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(context.TODO())
 
 	r.Logger().Println("Courier worker started.")
 	if err := graceful.Graceful(func() error {

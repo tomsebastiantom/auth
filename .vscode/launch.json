@@ -9,9 +9,8 @@
       "request": "launch",
       "mode": "debug",
       "program": "${workspaceFolder}/main.go",
-      "buildFlags": "-tags sqlite",
-      "preLaunchTask": "Kratos: setup",
-      "postDebugTask": "close tasks", // stops mailhog. Needed, because VSCode does not re-use existing isBackground tasks
+      // "preLaunchTask": "Kratos: setup",
+      // "postDebugTask": "close tasks", // stops mailhog. Needed, because VSCode does not re-use existing isBackground tasks
       "args": [
         "serve",
         "--dev",
@@ -20,14 +19,14 @@
       ],
       "internalConsoleOptions": "openOnSessionStart",
       "env": {
-        "IDENTITY_SCHEMAS_0_URL": "file://${workspaceFolder}/contrib/quickstart/kratos/email-password/identity.schema.json",
-        "DSN": "sqlite://${workspaceFolder}/.debug.sqlite.db?_fk=true",
-        "COURIER_SMTP_CONNECTION_URI": "smtp://localhost:8026/?disable_starttls=true",
-        "DEV_DISABLE_API_FLOW_ENFORCEMENT": "true",
+        "IDENTITY_SCHEMAS_0_URL": "file://D:/Dev/kratos/contrib/quickstart/kratos/email-password/identity.schema.json",
+        "DSN": "postgres://kratos:secret@127.0.0.1:5442/kratos?sslmode=disable",
+        "COURIER_SMTP_CONNECTION_URI": "smtp://mailslurper:4436/?disable_starttls=true",
+        // "DEV_DISABLE_API_FLOW_ENFORCEMENT": "true",
         "SELFSERVICE_METHODS_PASSWORD_CONFIG_HAVEIBEENPWNED_ENABLED": "false", // disable locally, as the integration hangs requests, if internet is slow
-        "TRACING_PROVIDER": "jaeger",
-        "TRACING_PROVIDERS_JAEGER_SAMPLING_SERVER_URL": "http://127.0.0.1:5778/sampling",
-        "TRACING_PROVIDERS_JAEGER_LOCAL_AGENT_ADDRESS": "127.0.0.1:6831"
+        // "TRACING_PROVIDER": "jaeger",
+        // "TRACING_PROVIDERS_JAEGER_SAMPLING_SERVER_URL": "http://127.0.0.1:5778/sampling",
+        // "TRACING_PROVIDERS_JAEGER_LOCAL_AGENT_ADDRESS": "127.0.0.1:6831"
       }
     }
   ]

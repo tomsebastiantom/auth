@@ -6,7 +6,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"runtime"
+	// "runtime"
 
 	"github.com/spf13/cobra"
 
@@ -22,17 +22,17 @@ import (
 	"github.com/ory/kratos/driver/config"
 	"github.com/ory/x/cmdx"
 	"github.com/ory/x/dbal"
-	"github.com/ory/x/jsonnetsecure"
-	"github.com/ory/x/profilex"
+	// "github.com/ory/x/jsonnetsecure"
+	// "github.com/ory/x/profilex"
 )
 
-func NewRootCmd(driverOpts ...driver.RegistryOption) (cmd *cobra.Command) {
+func NewRootCmd() (cmd *cobra.Command) {
 	cmd = &cobra.Command{
 		Use: "kratos",
 	}
 	cmdx.EnableUsageTemplating(cmd)
 
-	courier.RegisterCommandRecursive(cmd, nil, driverOpts)
+	courier.RegisterCommandRecursive(cmd, nil, nil)
 	cmd.AddCommand(identities.NewGetCmd())
 	cmd.AddCommand(identities.NewDeleteCmd())
 	cmd.AddCommand(jsonnet.NewFormatCmd())
@@ -41,14 +41,14 @@ func NewRootCmd(driverOpts ...driver.RegistryOption) (cmd *cobra.Command) {
 	cmd.AddCommand(jsonnet.NewLintCmd())
 	cmd.AddCommand(identities.NewListCmd())
 	migrate.RegisterCommandRecursive(cmd)
-	serve.RegisterCommandRecursive(cmd, nil, driverOpts)
+	serve.RegisterCommandRecursive(cmd, nil, nil)
 	cleanup.RegisterCommandRecursive(cmd)
 	remote.RegisterCommandRecursive(cmd)
 	cmd.AddCommand(identities.NewValidateCmd())
 	cmd.AddCommand(cmdx.Version(&config.Version, &config.Commit, &config.Date))
 
 	// Registers a hidden "jsonnet" subcommand for process-isolated Jsonnet VMs.
-	cmd.AddCommand(jsonnetsecure.NewJsonnetCmd())
+	// cmd.AddCommand(jsonnetsecure.NewJsonnetCmd())
 
 	return cmd
 }
@@ -56,16 +56,20 @@ func NewRootCmd(driverOpts ...driver.RegistryOption) (cmd *cobra.Command) {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the RootCmd.
 func Execute() int {
-	defer profilex.Profile().Stop()
+	c :=NewRootCmd()
+	// defer profilex.Profile().Stop()
 
+	// dbal.RegisterDriver(func() dbal.Driver {
+	// 	return driver.NewRegistryDefault()
+	// })
 	dbal.RegisterDriver(func() dbal.Driver {
 		return driver.NewRegistryDefault()
 	})
 
-	jsonnetPool := jsonnetsecure.NewProcessPool(runtime.GOMAXPROCS(0))
-	defer jsonnetPool.Close()
-
-	c := NewRootCmd(driver.WithJsonnetPool(jsonnetPool))
+	// jsonnetPool := jsonnetsecure.NewProcessPool(runtime.GOMAXPROCS(0))
+	// defer jsonnetPool.Close()
+	// // fmt.Printf("%+v\n", dbal.)
+	// c := NewRootCmd(driver.WithJsonnetPool(jsonnetPool))
 
 	if err := c.Execute(); err != nil {
 		if !errors.Is(err, cmdx.ErrNoPrintButFail) {
