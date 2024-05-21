@@ -63,3 +63,5 @@ test/e2e/kratos.*.yml
 # VSCode debug artifact
 __debug_bin
 .debug.sqlite.db
+
+__debug_bin1129171533.exe
