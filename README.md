@@ -5,13 +5,14 @@ https://github.com/ory/kratos
 
 Work in Progress:
 
-Separated cobra Commandline from main
-Standalone working of kratos with default config from directory
+1.Separated cobra Commandline from main
+
+2.Ory kratos loads the default config from directory 
 
 To DO:
 
-Loading tenant based config based on tenantId in the request.
+1.Loading tenant based config based on tenantId in the request.
 
 Maybe if Time permits TO DO:
 
-CMDLINES Execution in new thread and that too based in tenant
+1.CMDLINES Execution in new thread and that too based in tenant
