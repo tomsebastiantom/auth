@@ -1,5 +1,4 @@
-// Copyright © 2023 Ory Corp
-// SPDX-License-Identifier: Apache-2.0
+
 
 package driver
 
@@ -219,7 +218,8 @@ type NewStrategy func(deps any) any
 
 // WithReplaceStrategies adds a strategy to the registry. This is useful if you want to
 // add a custom strategy to the registry. Default strategies with the same
-// name/ID will be overwritten.
+// name/ID will be overwritten ... 
+
 func WithReplaceStrategies(s ...NewStrategy) RegistryOption {
 	return func(o *options) {
 		o.replacementStrategies = append(o.replacementStrategies, s...)

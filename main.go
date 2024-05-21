@@ -34,6 +34,9 @@ func main() {
 	flags.StringSlice("config", []string{"D:\\Dev\\kratos/contrib/quickstart/kratos/email-password/kratos.yml"}, "Path to the configuration file")
 
 	d, err := driver.New(ctx, nil, sl, nil, append(opts, configx.WithFlags(flags)))
+
+
+	
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,15 +55,3 @@ func main() {
 	
 }
 
-// import (
-
-// 	"os"
-
-// 	"github.com/ory/kratos/cmd"
-
-// )
-
-// func main() {
-// 	os.Exit(cmd.Execute())
-
-// }
