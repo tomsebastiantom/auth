@@ -1,16 +1,11 @@
-// Copyright © 2023 Ory Corp
-// SPDX-License-Identifier: Apache-2.0
-
-package daemon
+package cmd
 
 import (
 	stdctx "context"
 	"crypto/tls"
 	"net/http"
 	"time"
-
 	"github.com/rs/cors"
-
 	"github.com/ory/x/otelx/semconv"
 
 	"github.com/pkg/errors"
@@ -46,6 +41,10 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
+	"github.com/sirupsen/logrus"
+	"github.com/ory/x/logrusx"
+
+	
 )
 
 type options struct {
@@ -74,7 +73,7 @@ func init() {
 }
 
 func ServePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
-	modifiers := NewOptions(cmd.Context(), opts)
+	modifiers := NewOptions(context.Background(), opts)
 	ctx := modifiers.ctx
 
 	c := r.Config()
@@ -169,7 +168,7 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOp
 }
 
 func ServeAdmin(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpts *servicelocatorx.Options, opts []Option) {
-	modifiers := NewOptions(cmd.Context(), opts)
+	modifiers := NewOptions(context.Background(), opts)
 	ctx := modifiers.ctx
 
 	c := r.Config()
@@ -192,7 +191,7 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpt
 	n.Use(adminLogger)
 	n.UseFunc(x.RedirectAdminMiddleware)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
-	n.Use(sqa(ctx, cmd, r))
+	// n.Use(sqa(ctx, cmd, r))
 	n.Use(r.PrometheusManager())
 
 	router := x.NewRouterAdmin()
@@ -322,7 +321,7 @@ func sqa(ctx stdctx.Context, cmd *cobra.Command, d driver.Registry) *metricsx.Se
 }
 
 func BgTasks(d driver.Registry, cmd *cobra.Command, opts []Option) error {
-	modifiers := NewOptions(cmd.Context(), opts)
+	modifiers := NewOptions(nil, opts)
 	ctx := modifiers.ctx
 
 	if d.Config().IsBackgroundCourierEnabled(ctx) {
@@ -332,20 +331,60 @@ func BgTasks(d driver.Registry, cmd *cobra.Command, opts []Option) error {
 	return nil
 }
 
-func ServeAll(d driver.Registry, slOpts *servicelocatorx.Options, opts []Option) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, _ []string) error {
-		mods := NewOptions(cmd.Context(), opts)
-		ctx := mods.ctx
+// func ServeAll(d driver.Registry, slOpts *servicelocatorx.Options, opts []Option) func(cmd *cobra.Command, args []string) error {
+// 	return func(cmd *cobra.Command, _ []string) error {
+// 		mods := NewOptions(cmd.Context(), opts)
+// 		ctx := mods.ctx
 
-		g, ctx := errgroup.WithContext(ctx)
-		cmd.SetContext(ctx)
-		opts = append(opts, WithContext(ctx))
+// 		g, ctx := errgroup.WithContext(ctx)
+// 		cmd.SetContext(ctx)
+// 		opts = append(opts, WithContext(ctx))
 
-		ServePublic(d, cmd, g, slOpts, opts)
-		ServeAdmin(d, cmd, g, slOpts, opts)
-		g.Go(func() error {
-			return BgTasks(d, cmd, opts)
+// 		ServePublic(d, cmd, g, slOpts, opts)
+// 		ServeAdmin(d, cmd, g, slOpts, opts)
+// 		g.Go(func() error {
+// 			return BgTasks(d, cmd, opts)
+// 		})
+// 		return g.Wait()
+// 	}
+// }
+
+func ServeAll(d driver.Registry, slOpts *servicelocatorx.Options, opts []Option) error {
+	mods := NewOptions(context.Background(), opts)
+	ctx := mods.ctx
+
+	g, ctx := errgroup.WithContext(ctx)
+	opts = append(opts, WithContext(ctx))
+
+	ServePublic(d, nil, g, slOpts, opts)
+	ServeAdmin(d, nil, g, slOpts, opts)
+	g.Go(func() error {
+		return BgTasks(d, nil, opts)
+	})
+	return g.Wait()
+}
+
+
+
+
+func NewNegroniLoggerMiddleware(l *logrusx.Logger, name string) *reqlog.Middleware {
+	n := reqlog.NewMiddlewareFromLogger(l, name).ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
+	n.Before = func(entry *logrusx.Logger, req *http.Request, remoteAddr string) *logrusx.Logger {
+		return entry.WithFields(logrus.Fields{
+			"name":    name,
+			"request": req.RequestURI,
+			"method":  req.Method,
+			"remote":  remoteAddr,
 		})
-		return g.Wait()
 	}
+
+	n.After = func(entry *logrusx.Logger, req *http.Request, res negroni.ResponseWriter, latency time.Duration, name string) *logrusx.Logger {
+		return entry.WithFields(logrus.Fields{
+			"name":        name,
+			"status":      res.Status(),
+			"text_status": http.StatusText(res.Status()),
+			"took":        latency,
+		})
+	}
+	return n
 }

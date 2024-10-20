@@ -394,6 +394,7 @@ func New(ctx context.Context, l *logrusx.Logger, stdOutOrErr io.Writer, ctxer co
 		configx.WithLogrusWatcher(l),
 		configx.WithLogger(l),
 		configx.WithContext(ctx),
+		// configx.WithConfigFiles("file://D:/Dev/kratos/contrib/quickstart/kratos/email-password/kratos.yml"),
 		configx.AttachWatcher(func(event watcherx.Event, err error) {
 			if c == nil {
 				panic(errors.New("the config provider did not initialise correctly in time"))

@@ -9,7 +9,8 @@ import (
 	"github.com/ory/x/servicelocatorx"
 
 	"github.com/spf13/cobra"
-
+	"github.com/spf13/pflag"
+	"fmt"
 	"github.com/ory/kratos/cmd/daemon"
 	"github.com/ory/kratos/driver"
 )
@@ -23,6 +24,9 @@ func NewServeCmd(slOpts []servicelocatorx.Option, dOpts []driver.RegistryOption)
 			ctx := cmd.Context()
 			opts := configx.ConfigOptionsFromContext(ctx)
 			sl := servicelocatorx.NewOptions(slOpts...)
+			cmd.Flags().VisitAll(func(flag *pflag.Flag) {
+				fmt.Printf("Flag: %s, Value: %v\n", flag.Name, flag.Value)
+			})
 			d, err := driver.New(ctx, cmd.ErrOrStderr(), sl, dOpts, append(opts, configx.WithFlags(cmd.Flags())))
 			if err != nil {
 				return err

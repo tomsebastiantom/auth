@@ -95,7 +95,10 @@ func startE2EServerOnly(t *testing.T, configFile string, isTLS bool, configOptio
 	ctx, cancel := context.WithCancel(ctx)
 	executor := &cmdx.CommandExecuter{
 		New: func() *cobra.Command {
-			return cmd.NewRootCmd(driver.WithJsonnetPool(jsonnetPool))
+			// return cmd.NewRootCmd(driver.WithJsonnetPool(jsonnetPool))
+			return cmd.NewRootCmd()
+			
+
 		},
 		Ctx: ctx,
 	}
