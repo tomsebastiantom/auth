@@ -15,4 +15,4 @@ To DO:
 
 Maybe if Time permits TO DO:
 
-1.CMDLINES Execution in new thread and that too based in tenant
+1.CMDLINES Execution in new thread and that too based on tenant
