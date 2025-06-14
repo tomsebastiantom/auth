@@ -1,5 +1,3 @@
-
-
 package driver
 
 import (
@@ -189,6 +187,8 @@ type options struct {
 	extraHooks                    map[string]func(config.SelfServiceHook) any
 	disableMigrationLogging       bool
 	jsonnetPool                   jsonnetsecure.Pool
+	tenantAware                   bool
+	configDirectory               string
 }
 
 type RegistryOption func(*options)
@@ -225,7 +225,7 @@ type NewStrategy func(deps any) any
 
 // WithReplaceStrategies adds a strategy to the registry. This is useful if you want to
 // add a custom strategy to the registry. Default strategies with the same
-// name/ID will be overwritten ... 
+// name/ID will be overwritten ...
 
 func WithReplaceStrategies(s ...NewStrategy) RegistryOption {
 	return func(o *options) {
@@ -254,6 +254,13 @@ func WithExtraMigrations(m ...fs.FS) RegistryOption {
 func WithDisabledMigrationLogging() RegistryOption {
 	return func(o *options) {
 		o.disableMigrationLogging = true
+	}
+}
+
+func WithTenantAware(configDirectory string) RegistryOption {
+	return func(o *options) {
+		o.tenantAware = true
+		o.configDirectory = configDirectory
 	}
 }
 

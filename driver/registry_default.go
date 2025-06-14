@@ -72,6 +72,10 @@ type RegistryDefault struct {
 	rwl sync.RWMutex
 	l   *logrusx.Logger
 	c   *config.Config
+	// tenantAware indicates if this registry supports multi-tenant configuration
+	tenantAware      bool
+	configDirectory  string
+	tenantManager    *config.TenantManager
 
 	ctxer contextx.Contextualizer
 
@@ -301,6 +305,38 @@ func (m *RegistryDefault) Config() *config.Config {
 		panic("configuration not set")
 	}
 	return m.c
+}
+
+// TenantAwareConfig returns a tenant-aware configuration wrapper that can provide
+// tenant-specific configurations based on context
+func (m *RegistryDefault) TenantAwareConfig() *config.TenantAwareConfig {
+	if !m.tenantAware || m.tenantManager == nil {
+		// Return a wrapper around the base config for backward compatibility
+		return config.NewTenantAwareConfig(m.c, "")
+	}
+
+	// Return a tenant-aware config that uses the existing tenant manager
+	return config.NewTenantAwareConfigWithManager(m.c, m.tenantManager)
+}
+
+// ConfigForContext returns the appropriate configuration for the given context
+// If tenant-aware mode is enabled, it will return tenant-specific configuration
+func (m *RegistryDefault) ConfigForContext(ctx context.Context) *config.Config {
+	if !m.tenantAware || m.tenantManager == nil {
+		return m.c
+	}
+
+	// Return the tenant-aware config wrapper which handles tenant context internally
+	tac := m.TenantAwareConfig()
+	return tac.Config
+}
+
+// extractTenantFromContext extracts tenant ID from context
+func (m *RegistryDefault) extractTenantFromContext(ctx context.Context) string {
+	if tenantID, ok := ctx.Value("tenant_id").(string); ok {
+		return tenantID
+	}
+	return "default"
 }
 
 func (m *RegistryDefault) CourierConfig() config.CourierConfigs {
@@ -616,6 +652,13 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 
 	o := newOptions(opts)
 
+	// Initialize tenant-aware configuration if requested
+	if o.tenantAware {
+		m.tenantAware = true
+		m.configDirectory = o.configDirectory
+		m.tenantManager = config.NewTenantManager(m.c, o.configDirectory, m.l)
+	}
+
 	// m.jsonnetPool = o.jsonnetPool
 
 	var instrumentedDriverOpts []instrumentedsql.Opt
@@ -654,6 +697,7 @@ func (m *RegistryDefault) Init(ctx context.Context, ctxer contextx.Contextualize
 			WithField("pool", pool).
 			WithField("idlePool", idlePool).
 			WithField("connMaxLifetime", connMaxLifetime).
+			WithField("connMaxIdleTime", connMaxIdleTime).
 			Debug("Connecting to SQL Database")
 		c, err := pop.NewConnection(&pop.ConnectionDetails{
 			URL:                       sqlcon.FinalizeDSN(m.l, cleanedDSN),

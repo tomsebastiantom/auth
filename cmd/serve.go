@@ -5,7 +5,9 @@ import (
 	"crypto/tls"
 	"net/http"
 	"time"
+
 	"github.com/rs/cors"
+
 	"github.com/ory/x/otelx/semconv"
 
 	"github.com/pkg/errors"
@@ -25,6 +27,8 @@ import (
 	"github.com/ory/x/reqlog"
 	"github.com/ory/x/servicelocatorx"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/ory/kratos/cmd/courier"
 	"github.com/ory/kratos/driver"
 	"github.com/ory/kratos/driver/config"
@@ -41,10 +45,7 @@ import (
 	"github.com/ory/kratos/selfservice/strategy/oidc"
 	"github.com/ory/kratos/session"
 	"github.com/ory/kratos/x"
-	"github.com/sirupsen/logrus"
 	"github.com/ory/x/logrusx"
-
-	
 )
 
 type options struct {
@@ -92,10 +93,11 @@ func ServePublic(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOp
 	if r.Config().DisablePublicHealthRequestLog(ctx) {
 		publicLogger.ExcludePaths(healthx.AliveCheckPath, healthx.ReadyCheckPath)
 	}
-
 	n.UseFunc(semconv.Middleware)
 	n.Use(publicLogger)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
+	// Add tenant middleware to extract tenant ID from headers
+	n.UseFunc(x.TenantMiddleware())
 	// n.Use(sqa(ctx, cmd, r))
 
 	n.Use(r.PrometheusManager())
@@ -183,7 +185,6 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpt
 		l,
 		"admin#"+c.SelfPublicURL(ctx).String(),
 	)
-
 	if r.Config().DisableAdminHealthRequestLog(ctx) {
 		adminLogger.ExcludePaths(x.AdminPrefix+healthx.AliveCheckPath, x.AdminPrefix+healthx.ReadyCheckPath, x.AdminPrefix+prometheus.MetricsPrometheusPath)
 	}
@@ -191,6 +192,8 @@ func ServeAdmin(r driver.Registry, cmd *cobra.Command, eg *errgroup.Group, slOpt
 	n.Use(adminLogger)
 	n.UseFunc(x.RedirectAdminMiddleware)
 	n.Use(x.HTTPLoaderContextMiddleware(r))
+	// Add tenant middleware to extract tenant ID from headers
+	n.UseFunc(x.TenantMiddleware())
 	// n.Use(sqa(ctx, cmd, r))
 	n.Use(r.PrometheusManager())
 

@@ -1,0 +1,76 @@
+version: v0.13.0
+
+dsn: memory
+
+serve:
+  public:
+    base_url: http://tenant1.localhost:4433/
+    cors:
+      enabled: true
+  admin:
+    base_url: http://tenant1.localhost:4434/
+
+selfservice:
+  default_browser_return_url: http://tenant1.localhost:4455/
+  allowed_return_urls:
+    - http://tenant1.localhost:4455
+
+  methods:
+    password:
+      enabled: true
+
+  flows:
+    error:
+      ui_url: http://tenant1.localhost:4455/error
+
+    settings:
+      ui_url: http://tenant1.localhost:4455/settings
+      privileged_session_max_age: 30m # Different from default (15m)
+
+    recovery:
+      enabled: true
+      ui_url: http://tenant1.localhost:4455/recovery
+
+    verification:
+      enabled: true
+      ui_url: http://tenant1.localhost:4455/verification
+
+    logout:
+      after:
+        default_browser_return_url: http://tenant1.localhost:4455/login
+
+    login:
+      ui_url: http://tenant1.localhost:4455/login
+      lifespan: 30m # Different from default (10m)
+
+    registration:
+      lifespan: 30m # Different from default (10m)
+      ui_url: http://tenant1.localhost:4455/registration
+
+      after:
+        default_browser_return_url: http://tenant1.localhost:4455/welcome
+
+log:
+  level: info # Different from default (debug)
+  format: json # Different from default (text)
+  leak_sensitive_values: false # Different from default (true)
+
+secrets:
+  cookie:
+    - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
+  cipher:
+    - 32-LONG-SECRET-NOT-SECURE-AT-ALL
+
+ciphers:
+  algorithm: xchacha20-poly1305
+
+hashers:
+  algorithm: bcrypt
+  bcrypt:
+    cost: 12 # Higher cost than default (8)
+
+identity:
+  default_schema_id: default
+  schemas:
+    - id: default
+      url: file://./contrib/quickstart/kratos/email-password/identity.schema.json
